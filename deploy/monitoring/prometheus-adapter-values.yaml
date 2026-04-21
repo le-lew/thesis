@@ -1,0 +1,32 @@
+rules:
+  default: false
+  custom:
+    - seriesQuery: 'http_requests_total{namespace!="",pod!=""}'
+      resources:
+        overrides:
+          namespace:
+            resource: namespace
+          pod:
+            resource: pod
+      name:
+        matches: "^(.*)_total"
+        as: "${1}_per_second"
+      metricsQuery: 'sum(rate(http_requests_total{<<.LabelMatchers>>}[2m])) by (<<.GroupBy>>)'
+
+    - seriesQuery: 'http_request_duration_seconds_bucket{namespace!="",pod!=""}'
+      resources:
+        overrides:
+          namespace:
+            resource: namespace
+          pod:
+            resource: pod
+      name:
+        matches: "^(.*)_bucket"
+        as: "http_p95_latency_milliseconds"
+      metricsQuery: >
+        1000 *
+        histogram_quantile(
+          0.95,
+          sum(rate(http_request_duration_seconds_bucket{<<.LabelMatchers>>}[2m])) by (le, <<.GroupBy>>)
+        )
+

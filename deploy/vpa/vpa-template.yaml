@@ -1,0 +1,23 @@
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: sample-api-vpa
+  namespace: thesis-demo
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: sample-api
+  updatePolicy:
+    # 模式：Off | Initial | Recreate | Auto
+    updateMode: "Off"
+  resourcePolicy:
+    containerPolicies:
+      - containerName: httpbin
+        minAllowed:
+          cpu: 100m
+          memory: 128Mi
+        maxAllowed:
+          cpu: 1500m
+          memory: 2Gi
+        controlledResources: ["cpu", "memory"]
