@@ -1,0 +1,5 @@
+strategy,scenario,run_id,p95_ms,p99_ms,qps,failure_rate,avg_response_ms,request_count,failure_count,cpu_util_percent,memory_util_percent,scale_events,oscillation_events,cost_per_1k_req,top_samples,top_sample_fallback
+static,burst_smoke,static_20260506_154019_r1,6.0,13.0,270.3621960361065,0.0,3.947188272809188,32301.0,0.0,100.0,100.0,0,0,3.328070338379616e-05,0,1
+hpa_cpu,burst_smoke,hpa_cpu_20260506_154259_r1,6.0,13.0,270.4032427026201,0.0,4.01656491287591,32311.0,0.0,100.0,100.0,0,0,3.3270403268236816e-05,0,1
+hpa_multi,burst_smoke,hpa_multi_20260506_154539_r1,6.0,12.0,269.37417070822045,0.0,3.89804827972364,32175.0,0.0,100.0,100.0,0,0,3.34110334110334e-05,0,1
+hpa_vpa,burst_smoke,hpa_vpa_20260506_154819_r1,6.0,12.0,270.070897964981,0.0,3.8702448529973776,32310.0,0.0,100.0,100.0,0,0,3.327143299288145e-05,0,1

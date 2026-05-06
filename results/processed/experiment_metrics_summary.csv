@@ -1,0 +1,5 @@
+strategy,scenario,p95_ms_mean,p95_ms_std,p99_ms_mean,p99_ms_std,qps_mean,qps_std,failure_rate_mean,failure_rate_std,cpu_util_percent_mean,cpu_util_percent_std,memory_util_percent_mean,memory_util_percent_std,scale_events_mean,scale_events_std,oscillation_events_mean,oscillation_events_std,cost_per_1k_req_mean,cost_per_1k_req_std
+hpa_cpu,burst_smoke,6.0,0.0,13.0,0.0,270.4032427026201,0.0,0.0,0.0,100.0,0.0,100.0,0.0,0.0,0.0,0.0,0.0,3.3270403268236816e-05,0.0
+hpa_multi,burst_smoke,6.0,0.0,12.0,0.0,269.37417070822045,0.0,0.0,0.0,100.0,0.0,100.0,0.0,0.0,0.0,0.0,0.0,3.34110334110334e-05,0.0
+hpa_vpa,burst_smoke,6.0,0.0,12.0,0.0,270.070897964981,0.0,0.0,0.0,100.0,0.0,100.0,0.0,0.0,0.0,0.0,0.0,3.327143299288145e-05,0.0
+static,burst_smoke,6.0,0.0,13.0,0.0,270.3621960361065,0.0,0.0,0.0,100.0,0.0,100.0,0.0,0.0,0.0,0.0,0.0,3.328070338379616e-05,0.0

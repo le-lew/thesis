@@ -1,0 +1,44 @@
+﻿{
+    "timestamp":  "2026-05-06T15:45:24.4973500+08:00",
+    "strategy":  "hpa_cpu",
+    "scenario":  "burst_smoke",
+    "run_index":  1,
+    "config":  {
+                   "environment":  {
+                                       "k8s_namespace":  "thesis-demo",
+                                       "service_name":  "sample-api",
+                                       "service_port":  80,
+                                       "local_port":  8080,
+                                       "deployment_name":  "sample-api",
+                                       "container_name":  "echoserver"
+                                   },
+                   "experiment":  {
+                                      "scenario":  "burst_smoke",
+                                      "repeats":  1,
+                                      "users":  50,
+                                      "spawn_rate":  10,
+                                      "run_time":  "2m",
+                                      "warmup_seconds":  20,
+                                      "cooldown_seconds":  15,
+                                      "top_snapshot_interval_seconds":  10,
+                                      "max_wait_rollout_seconds":  300
+                                  },
+                   "strategies":  [
+                                      "static",
+                                      "hpa_cpu",
+                                      "hpa_multi",
+                                      "hpa_vpa"
+                                  ],
+                   "qps_metric_name":  "http_requests_per_second",
+                   "cost_proxy":  {
+                                      "cpu_weight":  0.7,
+                                      "memory_weight":  0.3,
+                                      "scale":  0.01
+                                  }
+               },
+    "environment":  {
+                        "kubectl_context":  "minikube2",
+                        "kubernetes_version":  "v1.29.8",
+                        "git_commit":  "c81c79490d8547554f64a01e2edea985cf99043a"
+                    }
+}
