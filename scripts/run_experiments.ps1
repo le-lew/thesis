@@ -60,11 +60,13 @@ while (`$true) {
   Start-Sleep -Seconds $IntervalSec
 }
 "@
-  $tmp = New-TemporaryFile
-  Set-Content -LiteralPath $tmp.FullName -Value $script -Encoding UTF8
+  $tmpDir = Join-Path (Get-Location) ".cache/runtime"
+  New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
+  $tmp = Join-Path $tmpDir ("top-sampler-{0}.ps1" -f ([guid]::NewGuid().ToString("N")))
+  Set-Content -LiteralPath $tmp -Value $script -Encoding UTF8
   $errLog = New-TemporaryFile
-  $proc = Start-Process -FilePath "powershell" -ArgumentList "-NoProfile", "-File", $tmp.FullName -WindowStyle Hidden -PassThru -RedirectStandardOutput $OutPath -RedirectStandardError $errLog.FullName
-  return @{ Process = $proc; ScriptPath = $tmp.FullName; ErrPath = $errLog.FullName }
+  $proc = Start-Process -FilePath "powershell" -ArgumentList "-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", $tmp -WindowStyle Hidden -PassThru -RedirectStandardOutput $OutPath -RedirectStandardError $errLog.FullName
+  return @{ Process = $proc; ScriptPath = $tmp; ErrPath = $errLog.FullName }
 }
 
 function Apply-Strategy {
@@ -101,6 +103,24 @@ function Apply-Strategy {
     default {
       throw "Unknown strategy: $Strategy"
     }
+  }
+}
+
+function Assert-CustomMetricReady {
+  param(
+    [string]$Namespace,
+    [string]$MetricName
+  )
+  $resources = kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1" 2>$null
+  if ($LASTEXITCODE -ne 0 -or $resources -notmatch $MetricName) {
+    throw "Custom metric API is not ready or metric missing: $MetricName"
+  }
+}
+
+function Assert-VpaReady {
+  $vpaApi = kubectl api-resources --verbs=list -o name 2>$null | Select-String -Pattern "verticalpodautoscalers.autoscaling.k8s.io"
+  if ($null -eq $vpaApi) {
+    throw "VPA CRD not found. Install VPA before running the hpa_vpa strategy."
   }
 }
 
@@ -163,6 +183,15 @@ if (-not $SkipPreflight) {
   Wait-Rollout -Namespace $ns -Deployment $dep -TimeoutSec ([int]$cfg.experiment.max_wait_rollout_seconds)
   Write-Host "[Preflight] verifying metrics API..."
   Invoke-Checked "kubectl top pods -n $ns"
+  if ($cfg.strategies -contains "hpa_multi" -or $cfg.strategies -contains "hpa_vpa") {
+    Write-Host "[Preflight] verifying custom metrics API..."
+    Assert-CustomMetricReady -Namespace $ns -MetricName $cfg.qps_metric_name
+  }
+  if ($cfg.strategies -contains "hpa_vpa") {
+    Write-Host "[Preflight] verifying VPA API..."
+    Assert-VpaReady
+    $script:VpaExists = $true
+  }
 }
 
 foreach ($strategy in $cfg.strategies) {

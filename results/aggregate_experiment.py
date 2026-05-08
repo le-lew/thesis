@@ -8,7 +8,7 @@ import pandas as pd
 
 def _read_top_log(path: Path) -> pd.DataFrame:
     if not path.exists():
-        return pd.DataFrame(columns=["cpu_m", "mem_mib"])
+        return pd.DataFrame(columns=["pod", "cpu_m", "mem_mib"])
 
     rows = []
     for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
@@ -18,6 +18,7 @@ def _read_top_log(path: Path) -> pd.DataFrame:
         payload = parts[-1].strip().split()
         if len(payload) < 3:
             continue
+        pod = payload[0]
         cpu_raw = payload[1]
         mem_raw = payload[2]
         cpu_m = 0.0
@@ -33,7 +34,7 @@ def _read_top_log(path: Path) -> pd.DataFrame:
         elif mem_raw.lower().endswith("gi"):
             mem_mib = float(mem_raw[:-2]) * 1024.0
 
-        rows.append({"cpu_m": cpu_m, "mem_mib": mem_mib})
+        rows.append({"pod": pod, "cpu_m": cpu_m, "mem_mib": mem_mib})
 
     return pd.DataFrame(rows)
 
@@ -67,6 +68,17 @@ def _read_locust_stats(path: Path) -> Dict[str, float]:
         "p99_ms": float(row["99%"]),
         "qps": float(row["Requests/s"]),
     }
+
+
+def _read_vpa_valid(path: Path) -> int:
+    if not path.exists():
+        return 0
+    text = path.read_text(encoding="utf-8", errors="ignore").replace("\x00", "").lower()
+    has_vpa = "kind: verticalpodautoscaler" in text or "verticalpodautoscaler" in text
+    has_recommendation = "recommendationprovided" in text or "updatemode: initial" in text
+    if has_vpa and has_recommendation and "vpa api resource not found" not in text:
+        return 1
+    return 0
 
 
 def _count_scale_events(events_path: Path) -> int:
@@ -138,6 +150,8 @@ def main() -> None:
           metrics = _read_locust_stats(stats_path)
 
           top_df = _read_top_log(run_dir / "top_pods.log")
+          if not top_df.empty:
+              top_df = top_df[top_df["pod"].astype(str).str.startswith("sample-api-")]
           top_samples = int(len(top_df))
           cpu_m = float(top_df["cpu_m"].mean()) if not top_df.empty else cpu_req_m
           mem_mib = float(top_df["mem_mib"].mean()) if not top_df.empty else mem_req_mib
@@ -172,6 +186,7 @@ def main() -> None:
                   "cost_per_1k_req": cost_per_1k,
                   "top_samples": top_samples,
                   "top_sample_fallback": 1 if top_samples == 0 else 0,
+                  "vpa_valid": _read_vpa_valid(run_dir / "vpa.yaml"),
               }
           )
 
@@ -213,6 +228,15 @@ def main() -> None:
     bad = cnt[cnt["n"] != repeat_expected]
     if not bad.empty:
         raise ValueError(f"run count mismatch: {bad.to_dict(orient='records')}")
+
+    if int(cfg["experiment"]["repeats"]) > 1:
+        top_bad = df[df["top_sample_fallback"] != 0]
+        if not top_bad.empty:
+            raise ValueError(f"top sampling missing in formal runs: {top_bad[['strategy', 'run_id']].to_dict(orient='records')}")
+        if "hpa_vpa" in set(df["strategy"]):
+            vpa_bad = df[(df["strategy"] == "hpa_vpa") & (df["vpa_valid"] != 1)]
+            if not vpa_bad.empty:
+                raise ValueError(f"hpa_vpa runs do not contain real VPA output: {vpa_bad[['run_id']].to_dict(orient='records')}")
 
     df.to_csv(out_path, index=False, encoding="utf-8")
     print(f"wrote per-run metrics: {out_path}")

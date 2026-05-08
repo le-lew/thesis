@@ -12,7 +12,7 @@ spec:
     updateMode: "Initial"
   resourcePolicy:
     containerPolicies:
-      - containerName: echoserver
+      - containerName: sample-api
         minAllowed:
           cpu: 100m
           memory: 128Mi

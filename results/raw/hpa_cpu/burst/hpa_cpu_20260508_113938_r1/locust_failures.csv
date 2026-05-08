@@ -1,0 +1,4 @@
+Method,Name,Error,Occurrences
+GET,GET /a,"OSError(10048, '[WinError 10048] 通常每个套接字地址(协议/网络地址/端口)只允许使用一次。')",4
+GET,GET /b,"OSError(10048, '[WinError 10048] 通常每个套接字地址(协议/网络地址/端口)只允许使用一次。')",3
+GET,GET /,"OSError(10048, '[WinError 10048] 通常每个套接字地址(协议/网络地址/端口)只允许使用一次。')",12

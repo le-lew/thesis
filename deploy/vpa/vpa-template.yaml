@@ -13,7 +13,7 @@ spec:
     updateMode: "Off"
   resourcePolicy:
     containerPolicies:
-      - containerName: httpbin
+      - containerName: sample-api
         minAllowed:
           cpu: 100m
           memory: 128Mi

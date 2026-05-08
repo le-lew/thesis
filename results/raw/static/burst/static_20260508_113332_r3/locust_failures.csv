@@ -1,0 +1,12 @@
+Method,Name,Error,Occurrences
+GET,GET /,"ConnectionRefusedError(10061, '[WinError 10061] 由于目标计算机积极拒绝，无法连接。')",471
+GET,GET /a,"OSError(10048, '[WinError 10048] 通常每个套接字地址(协议/网络地址/端口)只允许使用一次。')",3
+GET,GET /b,"OSError(10048, '[WinError 10048] 通常每个套接字地址(协议/网络地址/端口)只允许使用一次。')",2
+GET,GET /a,RemoteDisconnected('Remote end closed connection without response'),16
+GET,GET /,"ConnectionResetError(10054, '远程主机强迫关闭了一个现有的连接。', None, 10054, None)",10
+GET,GET /b,"ConnectionRefusedError(10061, '[WinError 10061] 由于目标计算机积极拒绝，无法连接。')",80
+GET,GET /b,RemoteDisconnected('Remote end closed connection without response'),3
+GET,GET /a,"ConnectionResetError(10054, '远程主机强迫关闭了一个现有的连接。', None, 10054, None)",2
+GET,GET /a,"ConnectionRefusedError(10061, '[WinError 10061] 由于目标计算机积极拒绝，无法连接。')",249
+GET,GET /,RemoteDisconnected('Remote end closed connection without response'),39
+GET,GET /,"OSError(10048, '[WinError 10048] 通常每个套接字地址(协议/网络地址/端口)只允许使用一次。')",7

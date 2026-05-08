@@ -5,7 +5,7 @@
     "service_port": 80,
     "local_port": 8080,
     "deployment_name": "sample-api",
-    "container_name": "echoserver"
+    "container_name": "sample-api"
   },
   "experiment": {
     "scenario": "burst_smoke",

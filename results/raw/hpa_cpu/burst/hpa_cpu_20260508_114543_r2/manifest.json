@@ -1,0 +1,44 @@
+﻿{
+    "timestamp":  "2026-05-08T11:51:19.4957587+08:00",
+    "strategy":  "hpa_cpu",
+    "scenario":  "burst",
+    "run_index":  2,
+    "config":  {
+                   "environment":  {
+                                       "k8s_namespace":  "thesis-demo",
+                                       "service_name":  "sample-api",
+                                       "service_port":  80,
+                                       "local_port":  8080,
+                                       "deployment_name":  "sample-api",
+                                       "container_name":  "sample-api"
+                                   },
+                   "experiment":  {
+                                      "scenario":  "burst",
+                                      "repeats":  3,
+                                      "users":  80,
+                                      "spawn_rate":  10,
+                                      "run_time":  "5m",
+                                      "warmup_seconds":  30,
+                                      "cooldown_seconds":  30,
+                                      "top_snapshot_interval_seconds":  10,
+                                      "max_wait_rollout_seconds":  300
+                                  },
+                   "strategies":  [
+                                      "static",
+                                      "hpa_cpu",
+                                      "hpa_multi",
+                                      "hpa_vpa"
+                                  ],
+                   "qps_metric_name":  "http_requests_per_second",
+                   "cost_proxy":  {
+                                      "cpu_weight":  0.7,
+                                      "memory_weight":  0.3,
+                                      "scale":  0.01
+                                  }
+               },
+    "environment":  {
+                        "kubectl_context":  "minikube2",
+                        "kubernetes_version":  "v1.35.1",
+                        "git_commit":  "cd25a9363693d008c6ebf3f9d956fe4c9879cab8"
+                    }
+}

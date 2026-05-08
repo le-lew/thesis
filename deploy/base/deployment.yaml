@@ -16,8 +16,8 @@ spec:
         app: sample-api
     spec:
       containers:
-        - name: echoserver
-          image: m.daocloud.io/registry.k8s.io/echoserver:1.10
+        - name: sample-api
+          image: thesis-sample-api:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

@@ -42,9 +42,18 @@ scripts/
 ## 4. 从零复现步骤
 
 1. 启动 Minikube 并确认集群可用。
+   本项目正式实验使用 `minikube2` profile、Docker runtime：
+
+```powershell
+minikube start -p minikube2 --driver=docker
+kubectl config use-context minikube2
+```
+
 2. 部署基础服务：
 
 ```powershell
+docker build -t thesis-sample-api:latest services/sample-api
+minikube -p minikube2 image load thesis-sample-api:latest
 kubectl apply -f deploy/base/namespace.yaml
 kubectl apply -f deploy/base/deployment.yaml
 kubectl apply -f deploy/base/service.yaml
@@ -53,14 +62,31 @@ kubectl apply -f deploy/base/service.yaml
 3. 安装 metrics-server（CPU/Memory HPA 必需）：
 
 ```powershell
-kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+minikube -p minikube2 addons enable metrics-server
+kubectl patch deployment metrics-server -n kube-system --type=json --patch-file ms_args_patch.json
+kubectl set image deployment/metrics-server -n kube-system metrics-server=m.daocloud.io/registry.k8s.io/metrics-server/metrics-server:v0.8.0
+kubectl wait --for=condition=Available deployment/metrics-server -n kube-system --timeout=180s
 ```
 
 4. 安装监控与自定义指标链路（Prometheus + Adapter）。
-   - 使用 `deploy/monitoring/prometheus-adapter-values.yaml` 作为 Adapter rules。
+   - 使用 `deploy/monitoring/prometheus.yaml` 部署 Prometheus。
+   - 使用 `deploy/monitoring/prometheus-adapter.yaml` 注册 `custom.metrics.k8s.io`。
    - 确认 `kubectl get --raw "/apis/custom.metrics.k8s.io/v1beta1"` 能查询到 `http_requests_per_second`。
 
-5. 执行全量实验（4组 * 3次）：
+```powershell
+docker pull m.daocloud.io/docker.io/prom/prometheus:v3.5.0
+docker pull m.daocloud.io/registry.k8s.io/prometheus-adapter/prometheus-adapter:v0.12.0
+minikube -p minikube2 image load m.daocloud.io/docker.io/prom/prometheus:v3.5.0
+minikube -p minikube2 image load m.daocloud.io/registry.k8s.io/prometheus-adapter/prometheus-adapter:v0.12.0
+kubectl apply -f deploy/monitoring/prometheus.yaml
+kubectl apply -f deploy/monitoring/prometheus-adapter.yaml
+```
+
+5. 安装 VPA 组件（HPA+VPA 组必需）。
+   - 正式实验需要 `verticalpodautoscalers.autoscaling.k8s.io` CRD。
+   - 本仓库保存 VPA 策略对象，VPA 控制器建议使用 Kubernetes autoscaler 官方仓库安装。
+
+6. 执行全量实验（4组 * 3次）：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/run_experiments.ps1
@@ -88,6 +114,13 @@ powershell -ExecutionPolicy Bypass -File scripts/run_experiments.ps1
 - `results/processed/experiment_metrics_summary.csv`（均值+标准差）
 - `results/figures/*.png`
 
+当前正式实验已完成：
+- 场景：`burst`
+- 记录数：`12`（4 组策略 * 3 次）
+- 正式数据：`results/processed/experiment_metrics.csv`
+- 正式论文：`docs/paper/刘乐-毕业论文终稿.docx`
+- 最终答辩：`docs/defense/刘乐-毕业设计最终答辩.pptx`
+
 ## 6. 指标口径
 
 性能：`P95/P99`, `QPS`, `failure_rate`
@@ -104,6 +137,8 @@ powershell -ExecutionPolicy Bypass -File scripts/run_experiments.ps1
 - 空值检查
 - 异常值区间检查
 - 每策略 run 数检查（必须等于配置 `repeats`）
+- 正式实验 top 采样检查（不允许 `top_sample_fallback=1`）
+- `hpa_vpa` 真实 VPA 输出检查（不允许降级为 fallback）
 
 任一校验失败将直接报错并停止出图。
 
